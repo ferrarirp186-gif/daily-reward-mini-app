@@ -10,7 +10,6 @@
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
   <style>
-
     * {
       box-sizing: border-box;
       margin: 0;
@@ -75,10 +74,12 @@
       font-size: 16px;
       font-weight: 600;
       margin-top: 45px;
+      cursor: pointer;
     }
 
     .claim:disabled {
       opacity: 0.5;
+      cursor: not-allowed;
     }
 
     .ad {
@@ -89,6 +90,7 @@
       padding: 17px;
       border-radius: 12px;
       margin-top: 14px;
+      cursor: pointer;
     }
 
     .ad-title {
@@ -132,7 +134,6 @@
       color: #111;
       font-weight: 600;
     }
-
   </style>
 
 </head>
@@ -213,13 +214,21 @@
     tg.expand();
 
 
-    /*
-      Supabase Telegram Authentication Function
-    */
+    /* Supabase Functions */
 
     const AUTH_URL =
       "https://pjypwghzuyjoabcpmbok.supabase.co/functions/v1/telegram-auth";
 
+    const REWARD_URL =
+      "https://pjypwghzuyjoabcpmbok.supabase.co/functions/v1/Claim-Reward";
+
+
+    let currentUser = null;
+
+
+    /* -------------------------
+       Telegram Login
+    ------------------------- */
 
     async function loginUser() {
 
@@ -227,29 +236,13 @@
 
         const initData = tg.initData;
 
-
-        /*
-          The app must be opened from Telegram.
-        */
-
         if (!initData) {
 
-          document.getElementById("welcome").innerText =
-            "Please open this app from Telegram.";
-
-          document.getElementById("points").innerText =
-            "0";
-
-          document.getElementById("status").innerText =
-            "Telegram authentication unavailable.";
-
-          return;
+          throw new Error(
+            "Please open this app from Telegram."
+          );
 
         }
-
-
-        document.getElementById("status").innerText =
-          "Connecting...";
 
 
         const response = await fetch(AUTH_URL, {
@@ -261,21 +254,13 @@
           },
 
           body: JSON.stringify({
-
             initData: initData
-
           })
 
         });
 
 
         const result = await response.json();
-
-
-        console.log(
-          "Telegram authentication result:",
-          result
-        );
 
 
         if (!response.ok || !result.success) {
@@ -288,58 +273,39 @@
         }
 
 
-        const user = result.user;
+        currentUser = result.user;
 
-
-        /*
-          Display real database balance
-        */
 
         document.getElementById("points").innerText =
-          user.points;
+          currentUser.points;
 
 
-        /*
-          Display Telegram user's name
-        */
-
-        const displayName =
-          user.first_name ||
-          user.username ||
+        const name =
+          currentUser.first_name ||
+          currentUser.username ||
           "User";
 
 
         document.getElementById("welcome").innerText =
-          "Welcome, " + displayName;
+          "Welcome, " + name;
 
 
         document.getElementById("status").innerText =
           "Account connected";
 
 
-        /*
-          Haptic feedback
-        */
+        /* Enable reward button */
 
-        if (
-          tg.HapticFeedback &&
-          tg.HapticFeedback.notificationOccurred
-        ) {
+        document.getElementById(
+          "claimButton"
+        ).disabled = false;
 
-          tg.HapticFeedback.notificationOccurred(
-            "success"
-          );
-
-        }
 
       }
 
       catch (error) {
 
-        console.error(
-          "Authentication error:",
-          error
-        );
+        console.error(error);
 
 
         document.getElementById("points").innerText =
@@ -359,27 +325,151 @@
     }
 
 
-    /*
-      Start authentication
-    */
+    /* -------------------------
+       Claim Daily Reward
+    ------------------------- */
 
-    loginUser();
+    async function claimReward() {
+
+      const button =
+        document.getElementById("claimButton");
+
+      const status =
+        document.getElementById("status");
 
 
-    /*
-      Watch Ad
-      Monetag will be connected here later.
-    */
+      button.disabled = true;
+
+      button.innerText =
+        "Claiming...";
+
+      status.innerText =
+        "Processing reward...";
+
+
+      try {
+
+        const initData = tg.initData;
+
+
+        const response = await fetch(
+          REWARD_URL,
+          {
+
+            method: "POST",
+
+            headers: {
+              "Content-Type": "application/json"
+            },
+
+            body: JSON.stringify({
+              initData: initData
+            })
+
+          }
+        );
+
+
+        const result =
+          await response.json();
+
+
+        console.log(
+          "Reward result:",
+          result
+        );
+
+
+        if (!response.ok || !result.success) {
+
+          throw new Error(
+            result.error ||
+            "Reward could not be claimed."
+          );
+
+        }
+
+
+        /* Update balance */
+
+        document.getElementById(
+          "points"
+        ).innerText = result.points;
+
+
+        status.innerText =
+          "+10 Points added successfully";
+
+
+        button.innerText =
+          "Reward Claimed";
+
+
+        if (
+          tg.HapticFeedback &&
+          tg.HapticFeedback.notificationOccurred
+        ) {
+
+          tg.HapticFeedback.notificationOccurred(
+            "success"
+          );
+
+        }
+
+
+      }
+
+      catch (error) {
+
+        console.error(error);
+
+
+        status.innerText =
+          error.message ||
+          "Something went wrong";
+
+
+        button.innerText =
+          "Daily Reward";
+
+
+        button.disabled = false;
+
+      }
+
+    }
+
+
+    /* -------------------------
+       Button Events
+    ------------------------- */
+
+    document
+      .getElementById("claimButton")
+      .addEventListener(
+        "click",
+        claimReward
+      );
+
 
     document
       .getElementById("watchAd")
-      .addEventListener("click", function () {
+      .addEventListener(
+        "click",
+        function () {
 
-        document.getElementById("status").innerText =
-          "Ad system will be connected soon.";
+          document.getElementById(
+            "status"
+          ).innerText =
+            "Ad system will be connected soon.";
 
-      });
+        }
+      );
 
+
+    /* Start */
+
+    loginUser();
 
   </script>
 

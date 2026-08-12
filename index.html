@@ -1,13 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <title>Daily Reward</title>
 
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
   <style>
+
     * {
       box-sizing: border-box;
       margin: 0;
@@ -34,8 +37,15 @@
     }
 
     .header h1 {
-      font-size: 20px;
+      font-size: 21px;
       font-weight: 600;
+    }
+
+    .welcome {
+      text-align: center;
+      margin-top: 10px;
+      font-size: 14px;
+      color: #777;
     }
 
     .balance {
@@ -44,7 +54,7 @@
     }
 
     .points {
-      font-size: 52px;
+      font-size: 54px;
       font-weight: 700;
     }
 
@@ -65,7 +75,10 @@
       font-size: 16px;
       font-weight: 600;
       margin-top: 45px;
-      cursor: pointer;
+    }
+
+    .claim:disabled {
+      opacity: 0.5;
     }
 
     .ad {
@@ -76,7 +89,6 @@
       padding: 17px;
       border-radius: 12px;
       margin-top: 14px;
-      cursor: pointer;
     }
 
     .ad-title {
@@ -87,6 +99,14 @@
     .ad-reward {
       font-size: 14px;
       color: #777;
+    }
+
+    .status {
+      text-align: center;
+      margin-top: 22px;
+      font-size: 13px;
+      color: #777;
+      min-height: 18px;
     }
 
     .bottom-nav {
@@ -112,77 +132,257 @@
       color: #111;
       font-weight: 600;
     }
+
   </style>
+
 </head>
 
 <body>
 
-<div class="app">
+  <div class="app">
 
-  <div class="header">
-    <h1>Daily Reward</h1>
+    <div class="header">
+      <h1>Daily Reward</h1>
+    </div>
+
+    <div class="welcome" id="welcome">
+      Connecting...
+    </div>
+
+    <div class="balance">
+
+      <div class="points" id="points">
+        ...
+      </div>
+
+      <div class="label">
+        POINTS
+      </div>
+
+    </div>
+
+    <button
+      class="claim"
+      id="claimButton"
+      disabled
+    >
+      Daily Reward
+    </button>
+
+    <div class="ad" id="watchAd">
+
+      <div class="ad-title">
+        Watch Ad
+      </div>
+
+      <div class="ad-reward">
+        +10 Points
+      </div>
+
+    </div>
+
+    <div class="status" id="status">
+      Connecting to account...
+    </div>
+
   </div>
 
-  <div class="balance">
-    <div class="points" id="points">120</div>
-    <div class="label">POINTS</div>
+
+  <div class="bottom-nav">
+
+    <div class="nav-item active">
+      Home
+    </div>
+
+    <div class="nav-item">
+      Tasks
+    </div>
+
+    <div class="nav-item">
+      Profile
+    </div>
+
   </div>
 
-  <button class="claim" onclick="claimReward()">
-    Claim Reward
-  </button>
 
-  <div class="ad" onclick="watchAd()">
-    <div class="ad-title">Watch Ad</div>
-    <div class="ad-reward">+10 Points</div>
-  </div>
+  <script>
 
-</div>
+    const tg = window.Telegram.WebApp;
 
-<div class="bottom-nav">
+    tg.ready();
+    tg.expand();
 
-  <div class="nav-item active">
-    Home
-  </div>
 
-  <div class="nav-item">
-    Tasks
-  </div>
+    /*
+      Supabase Telegram Authentication Function
+    */
 
-  <div class="nav-item">
-    Profile
-  </div>
+    const AUTH_URL =
+      "https://pjypwghzuyjoabcpmbok.supabase.co/functions/v1/telegram-auth";
 
-</div>
 
-<script>
+    async function loginUser() {
 
-  const tg = window.Telegram.WebApp;
+      try {
 
-  tg.ready();
-  tg.expand();
+        const initData = tg.initData;
 
-  let points = 120;
 
-  function claimReward() {
+        /*
+          The app must be opened from Telegram.
+        */
 
-    points += 10;
+        if (!initData) {
 
-    document.getElementById("points").innerText = points;
+          document.getElementById("welcome").innerText =
+            "Please open this app from Telegram.";
 
-    tg.HapticFeedback.notificationOccurred("success");
+          document.getElementById("points").innerText =
+            "0";
 
-    alert("Reward claimed! +10 Points");
+          document.getElementById("status").innerText =
+            "Telegram authentication unavailable.";
 
-  }
+          return;
 
-  function watchAd() {
+        }
 
-    alert("Ad system will be connected here.");
 
-  }
+        document.getElementById("status").innerText =
+          "Connecting...";
 
-</script>
+
+        const response = await fetch(AUTH_URL, {
+
+          method: "POST",
+
+          headers: {
+            "Content-Type": "application/json"
+          },
+
+          body: JSON.stringify({
+
+            initData: initData
+
+          })
+
+        });
+
+
+        const result = await response.json();
+
+
+        console.log(
+          "Telegram authentication result:",
+          result
+        );
+
+
+        if (!response.ok || !result.success) {
+
+          throw new Error(
+            result.error ||
+            "Authentication failed"
+          );
+
+        }
+
+
+        const user = result.user;
+
+
+        /*
+          Display real database balance
+        */
+
+        document.getElementById("points").innerText =
+          user.points;
+
+
+        /*
+          Display Telegram user's name
+        */
+
+        const displayName =
+          user.first_name ||
+          user.username ||
+          "User";
+
+
+        document.getElementById("welcome").innerText =
+          "Welcome, " + displayName;
+
+
+        document.getElementById("status").innerText =
+          "Account connected";
+
+
+        /*
+          Haptic feedback
+        */
+
+        if (
+          tg.HapticFeedback &&
+          tg.HapticFeedback.notificationOccurred
+        ) {
+
+          tg.HapticFeedback.notificationOccurred(
+            "success"
+          );
+
+        }
+
+      }
+
+      catch (error) {
+
+        console.error(
+          "Authentication error:",
+          error
+        );
+
+
+        document.getElementById("points").innerText =
+          "0";
+
+
+        document.getElementById("welcome").innerText =
+          "Unable to connect";
+
+
+        document.getElementById("status").innerText =
+          error.message ||
+          "Connection failed";
+
+      }
+
+    }
+
+
+    /*
+      Start authentication
+    */
+
+    loginUser();
+
+
+    /*
+      Watch Ad
+      Monetag will be connected here later.
+    */
+
+    document
+      .getElementById("watchAd")
+      .addEventListener("click", function () {
+
+        document.getElementById("status").innerText =
+          "Ad system will be connected soon.";
+
+      });
+
+
+  </script>
 
 </body>
+
 </html>

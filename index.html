@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Daily Reward</title>
+
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: #f7f7f7;
+      color: #111;
+      min-height: 100vh;
+    }
+
+    .app {
+      max-width: 480px;
+      margin: auto;
+      min-height: 100vh;
+      padding: 28px 20px 90px;
+    }
+
+    .header {
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    .header h1 {
+      font-size: 20px;
+      font-weight: 600;
+    }
+
+    .balance {
+      text-align: center;
+      margin-top: 55px;
+    }
+
+    .points {
+      font-size: 52px;
+      font-weight: 700;
+    }
+
+    .label {
+      font-size: 13px;
+      color: #777;
+      margin-top: 5px;
+      letter-spacing: 1px;
+    }
+
+    .claim {
+      width: 100%;
+      border: none;
+      background: #111;
+      color: white;
+      padding: 16px;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      margin-top: 45px;
+      cursor: pointer;
+    }
+
+    .ad {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: white;
+      padding: 17px;
+      border-radius: 12px;
+      margin-top: 14px;
+      cursor: pointer;
+    }
+
+    .ad-title {
+      font-size: 15px;
+      font-weight: 500;
+    }
+
+    .ad-reward {
+      font-size: 14px;
+      color: #777;
+    }
+
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      max-width: 480px;
+      margin: auto;
+      background: white;
+      border-top: 1px solid #eee;
+      display: flex;
+      justify-content: space-around;
+      padding: 15px 0;
+    }
+
+    .nav-item {
+      font-size: 13px;
+      color: #777;
+    }
+
+    .nav-item.active {
+      color: #111;
+      font-weight: 600;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="app">
+
+  <div class="header">
+    <h1>Daily Reward</h1>
+  </div>
+
+  <div class="balance">
+    <div class="points" id="points">120</div>
+    <div class="label">POINTS</div>
+  </div>
+
+  <button class="claim" onclick="claimReward()">
+    Claim Reward
+  </button>
+
+  <div class="ad" onclick="watchAd()">
+    <div class="ad-title">Watch Ad</div>
+    <div class="ad-reward">+10 Points</div>
+  </div>
+
+</div>
+
+<div class="bottom-nav">
+
+  <div class="nav-item active">
+    Home
+  </div>
+
+  <div class="nav-item">
+    Tasks
+  </div>
+
+  <div class="nav-item">
+    Profile
+  </div>
+
+</div>
+
+<script>
+
+  const tg = window.Telegram.WebApp;
+
+  tg.ready();
+  tg.expand();
+
+  let points = 120;
+
+  function claimReward() {
+
+    points += 10;
+
+    document.getElementById("points").innerText = points;
+
+    tg.HapticFeedback.notificationOccurred("success");
+
+    alert("Reward claimed! +10 Points");
+
+  }
+
+  function watchAd() {
+
+    alert("Ad system will be connected here.");
+
+  }
+
+</script>
+
+</body>
+</html>

@@ -466,7 +466,7 @@
       try {
 
         await show_11565402({
-    ymid: String(currentUser.id),
+    ymid: String(currentUser.id) + "_" + Date.now(),
     requestVar: "daily_reward"
 });
 
@@ -474,11 +474,14 @@
 
         await claimReward();
 
-      } catch (error) {
+    } catch (error) {
 
-        console.error(error);
+    console.error("Monetag error:", error);
 
-        status.innerText = "Ad could not be completed.";
+    status.innerText =
+        "Ad error: " + (error?.message || "Unknown error");
+
+}
 
       }
 

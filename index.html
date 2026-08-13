@@ -232,68 +232,62 @@
     ------------------------- */
 
     async function loginUser() {
+    const status = document.getElementById("status");
 
-      try {
+    try {
+        status.innerText = "1. Login started...";
 
         const initData = tg.initData;
 
         if (!initData) {
-
-          throw new Error(
-            "Please open this app from Telegram."
-          );
-
+            throw new Error("initData is empty");
         }
 
+        status.innerText = "2. initData found...";
 
         const response = await fetch(AUTH_URL, {
-
-          method: "POST",
-
-          headers: {
-            "Content-Type": "application/json"
-          },
-
-          body: JSON.stringify({
-            initData: initData
-          })
-
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                initData: initData
+            })
         });
 
+        status.innerText = "3. Server responded...";
 
         const result = await response.json();
 
+        console.log("AUTH RESULT:", result);
 
         if (!response.ok || !result.success) {
-
-          throw new Error(
-            result.error ||
-            "Authentication failed"
-          );
-
+            throw new Error(result.error || "Authentication failed");
         }
-
 
         currentUser = result.user;
 
-
         document.getElementById("points").innerText =
-          currentUser.points;
-
+            currentUser.points ?? 0;
 
         const name =
-          currentUser.first_name ||
-          currentUser.username ||
-          "User";
-
+            currentUser.first_name ||
+            currentUser.username ||
+            "User";
 
         document.getElementById("welcome").innerText =
-          "Welcome, " + name;
+            "Welcome, " + name;
 
+        status.innerText = "Account connected successfully.";
 
-        document.getElementById("status").innerText =
-          "Account connected";
+        document.getElementById("claimButton").disabled = false;
 
+    } catch (error) {
+        console.error("LOGIN ERROR:", error);
+        status.innerText =
+            "ERROR: " + (error.message || "Unknown error");
+    }
+}
 
         /* Enable reward button */
 

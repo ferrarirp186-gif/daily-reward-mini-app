@@ -208,13 +208,7 @@
 
 
   <script>
-
-    const tg = window.Telegram.WebApp;
-
-    tg.ready();
-    tg.expand();
-
-
+    
     /* Supabase Functions */
 
     const AUTH_URL =
@@ -236,6 +230,15 @@
 
     try {
         status.innerText = "1. Login started...";
+      const tg = window.Telegram?.WebApp;
+
+if (!tg) {
+    throw new Error("Telegram WebApp is not available");
+}
+
+tg.ready();
+tg.expand();
+      
 
         const initData = tg.initData;
 

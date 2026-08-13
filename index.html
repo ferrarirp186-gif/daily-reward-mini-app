@@ -454,18 +454,33 @@
 
 
     document
-      .getElementById("watchAd")
-      .addEventListener(
-        "click",
-        function () {
+  .getElementById("watchAd")
+  .addEventListener(
+    "click",
+    async function () {
 
-          document.getElementById(
-            "status"
-          ).innerText =
-            "Ad system will be connected soon.";
+      const status = document.getElementById("status");
 
-        }
-      );
+      status.innerText = "Loading ad...";
+
+      try {
+
+        await show_11565402();
+
+        status.innerText = "Ad completed. Processing reward...";
+
+        await claimReward();
+
+      } catch (error) {
+
+        console.error(error);
+
+        status.innerText = "Ad could not be completed.";
+
+      }
+
+    }
+  );
 
 
     /* Start */

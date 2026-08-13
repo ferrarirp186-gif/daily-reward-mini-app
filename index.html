@@ -465,10 +465,12 @@
 
       try {
 
-        await show_11565402({
-    ymid: String(currentUser.id) + "_" + Date.now(),
-    requestVar: "daily_reward"
+        const adResult = await show_11565402({
+  ymid: String(currentUser.id) + "_" + Date.now(),
+  requestVar: "daily_reward"
 });
+
+console.log("MONETAG AD RESULT:", adResult);
 
         status.innerText = "Ad completed. Processing reward...";
 

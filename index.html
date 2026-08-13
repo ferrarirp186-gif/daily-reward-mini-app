@@ -291,35 +291,7 @@ tg.expand();
             "ERROR: " + (error.message || "Unknown error");
     }
 }
-
-        /* Enable reward button */
-
-        document.getElementById(
-          "claimButton"
-        ).disabled = false;
-
-      catch (error) {
-
-        console.error(error);
-
-
-        document.getElementById("points").innerText =
-          "0";
-
-
-        document.getElementById("welcome").innerText =
-          "Unable to connect";
-
-
-        document.getElementById("status").innerText =
-          error.message ||
-          "Connection failed";
-
-      }
-
-    }
-
-
+   
     /* -------------------------
        Claim Daily Reward
     ------------------------- */

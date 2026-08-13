@@ -465,7 +465,10 @@
 
       try {
 
-        await show_11565402();
+        await show_11565402({
+    ymid: String(currentUser.id),
+    requestVar: "daily_reward"
+});
 
         status.innerText = "Ad completed. Processing reward...";
 

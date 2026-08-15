@@ -2,15 +2,28 @@
 <html lang="en">
 
 <head>
-  <script src='//libtl.com/sdk.js' data-zone='11565402' data-sdk='show_11565402'></script>
+
+  <!-- Monetag SDK -->
+  <script
+    src="//libtl.com/sdk.js"
+    data-zone="11565402"
+    data-sdk="show_11565402">
+  </script>
+
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0">
 
   <title>Daily Reward</title>
 
+  <!-- Telegram WebApp SDK -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
+
   <style>
+
     * {
       box-sizing: border-box;
       margin: 0;
@@ -135,9 +148,11 @@
       color: #111;
       font-weight: 600;
     }
+
   </style>
 
 </head>
+
 
 <body>
 
@@ -147,14 +162,24 @@
       <h1>Daily Reward</h1>
     </div>
 
-    <div class="welcome" id="welcome">
+
+    <div
+      class="welcome"
+      id="welcome">
+
       Connecting...
+
     </div>
+
 
     <div class="balance">
 
-      <div class="points" id="points">
+      <div
+        class="points"
+        id="points">
+
         ...
+
       </div>
 
       <div class="label">
@@ -163,15 +188,20 @@
 
     </div>
 
+
     <button
       class="claim"
       id="claimButton"
-      disabled
-    >
+      disabled>
+
       Daily Reward
+
     </button>
 
-    <div class="ad" id="watchAd">
+
+    <div
+      class="ad"
+      id="watchAd">
 
       <div class="ad-title">
         Watch Ad
@@ -183,8 +213,13 @@
 
     </div>
 
-    <div class="status" id="status">
+
+    <div
+      class="status"
+      id="status">
+
       Connecting to account...
+
     </div>
 
   </div>
@@ -205,11 +240,30 @@
     </div>
 
   </div>
-    
-    /* Supabase Functions */
+
+
+
+  <!-- ======================================
+       MAIN JAVASCRIPT
+       ====================================== -->
+
+  <script>
+
+
+    /* ======================================
+       Telegram WebApp
+       ====================================== */
+
+    const tg = window.Telegram?.WebApp;
+
+
+    /* ======================================
+       Supabase Functions
+       ====================================== */
 
     const AUTH_URL =
       "https://pjypwghzuyjoabcpmbok.supabase.co/functions/v1/telegram-auth";
+
 
     const REWARD_URL =
       "https://pjypwghzuyjoabcpmbok.supabase.co/functions/v1/Claim-Reward";
@@ -218,120 +272,96 @@
     let currentUser = null;
 
 
-    /* -------------------------
+
+    /* ======================================
        Telegram Login
-    ------------------------- */
+       ====================================== */
 
     async function loginUser() {
-    const status = document.getElementById("status");
-
-    try {
-        status.innerText = "1. Login started...";
-      const tg = window.Telegram?.WebApp;
-
-if (!tg) {
-    throw new Error("Telegram WebApp is not available");
-}
-
-tg.ready();
-tg.expand();
-      
-
-        const initData = tg.initData;
-
-        if (!initData) {
-            throw new Error("initData is empty");
-        }
-
-        status.innerText = "2. initData found...";
-
-        const response = await fetch(AUTH_URL, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                initData: initData
-            })
-        });
-
-        status.innerText = "3. Server responded...";
-
-        const result = await response.json();
-
-        console.log("AUTH RESULT:", result);
-
-        if (!response.ok || !result.success) {
-            throw new Error(result.error || "Authentication failed");
-        }
-
-        currentUser = result.user;
-
-        document.getElementById("points").innerText =
-            currentUser.points ?? 0;
-
-        const name =
-            currentUser.first_name ||
-            currentUser.username ||
-            "User";
-
-        document.getElementById("welcome").innerText =
-            "Welcome, " + name;
-
-        status.innerText = "Account connected successfully.";
-
-        document.getElementById("claimButton").disabled = false;
-
-    } catch (error) {
-        console.error("LOGIN ERROR:", error);
-        status.innerText =
-            "ERROR: " + (error.message || "Unknown error");
-    }
-}
-   
-    /* -------------------------
-       Claim Daily Reward
-    ------------------------- */
-
-    async function claimReward() {
-
-      const button =
-        document.getElementById("claimButton");
 
       const status =
         document.getElementById("status");
 
 
-      button.disabled = true;
-
-      button.innerText =
-        "Claiming...";
-
-      status.innerText =
-        "Processing reward...";
-
-
       try {
 
-        const initData = tg.initData;
+        console.log("SCRIPT LOADED");
+
+        status.innerText =
+          "1. Login started...";
 
 
-        const response = await fetch(
-          REWARD_URL,
-          {
+        /* Check Telegram */
 
-            method: "POST",
+        if (!tg) {
 
-            headers: {
-              "Content-Type": "application/json"
-            },
+          throw new Error(
+            "Telegram WebApp is not available"
+          );
 
-            body: JSON.stringify({
-              initData: initData
-            })
+        }
 
-          }
+
+        /* Initialize Telegram */
+
+        tg.ready();
+
+        tg.expand();
+
+
+        console.log(
+          "Telegram WebApp initialized"
         );
+
+
+        /* Get initData */
+
+        const initData =
+          tg.initData;
+
+
+        console.log(
+          "initData available:",
+          !!initData
+        );
+
+
+        if (!initData) {
+
+          throw new Error(
+            "initData is empty. Please open this app inside Telegram."
+          );
+
+        }
+
+
+        status.innerText =
+          "2. initData found...";
+
+
+        /* Send authentication request */
+
+        const response =
+          await fetch(
+            AUTH_URL,
+            {
+
+              method: "POST",
+
+              headers: {
+                "Content-Type": "application/json"
+              },
+
+              body: JSON.stringify({
+                initData: initData
+              })
+
+            }
+          );
+
+
+        status.innerText =
+          "3. Server responded...";
 
 
         const result =
@@ -339,12 +369,192 @@ tg.expand();
 
 
         console.log(
-          "Reward result:",
+          "AUTH RESULT:",
           result
         );
 
 
-        if (!response.ok || !result.success) {
+        if (
+          !response.ok ||
+          !result.success
+        ) {
+
+          throw new Error(
+            result.error ||
+            "Authentication failed"
+          );
+
+        }
+
+
+        /* Save current user */
+
+        currentUser =
+          result.user;
+
+
+        console.log(
+          "CURRENT USER:",
+          currentUser
+        );
+
+
+        /* Update points */
+
+        document
+          .getElementById("points")
+          .innerText =
+          currentUser.points ?? 0;
+
+
+        /* User name */
+
+        const name =
+          currentUser.first_name ||
+          currentUser.username ||
+          "User";
+
+
+        document
+          .getElementById("welcome")
+          .innerText =
+          "Welcome, " + name;
+
+
+        /* Login successful */
+
+        status.innerText =
+          "Account connected successfully.";
+
+
+        /* Enable daily reward button */
+
+        document
+          .getElementById("claimButton")
+          .disabled = false;
+
+
+      }
+
+      catch (error) {
+
+        console.error(
+          "LOGIN ERROR:",
+          error
+        );
+
+
+        status.innerText =
+          "ERROR: " +
+          (
+            error?.message ||
+            "Unknown error"
+          );
+
+      }
+
+    }
+
+
+
+    /* ======================================
+       Claim Reward
+       ====================================== */
+
+    async function claimReward() {
+
+      const button =
+        document.getElementById(
+          "claimButton"
+        );
+
+
+      const status =
+        document.getElementById(
+          "status"
+        );
+
+
+      try {
+
+        if (!currentUser) {
+
+          throw new Error(
+            "Account is not connected yet."
+          );
+
+        }
+
+
+        button.disabled = true;
+
+        button.innerText =
+          "Claiming...";
+
+
+        status.innerText =
+          "Processing reward...";
+
+
+        /* Get Telegram initData */
+
+        if (!tg) {
+
+          throw new Error(
+            "Telegram WebApp is not available."
+          );
+
+        }
+
+
+        const initData =
+          tg.initData;
+
+
+        if (!initData) {
+
+          throw new Error(
+            "Telegram session data is missing."
+          );
+
+        }
+
+
+        /* Send reward request */
+
+        const response =
+          await fetch(
+            REWARD_URL,
+            {
+
+              method: "POST",
+
+              headers: {
+                "Content-Type": "application/json"
+              },
+
+              body: JSON.stringify({
+                initData: initData
+              })
+
+            }
+          );
+
+
+        const result =
+          await response.json();
+
+
+        console.log(
+          "REWARD RESULT:",
+          result
+        );
+
+
+        if (
+          !response.ok ||
+          !result.success
+        ) {
 
           throw new Error(
             result.error ||
@@ -354,11 +564,12 @@ tg.expand();
         }
 
 
-        /* Update balance */
+        /* Update points */
 
-        document.getElementById(
-          "points"
-        ).innerText = result.points;
+        document
+          .getElementById("points")
+          .innerText =
+          result.points;
 
 
         status.innerText =
@@ -368,6 +579,8 @@ tg.expand();
         button.innerText =
           "Reward Claimed";
 
+
+        /* Haptic feedback */
 
         if (
           tg.HapticFeedback &&
@@ -385,11 +598,14 @@ tg.expand();
 
       catch (error) {
 
-        console.error(error);
+        console.error(
+          "REWARD ERROR:",
+          error
+        );
 
 
         status.innerText =
-          error.message ||
+          error?.message ||
           "Something went wrong";
 
 
@@ -397,61 +613,172 @@ tg.expand();
           "Daily Reward";
 
 
-        button.disabled = false;
+        button.disabled =
+          false;
 
       }
 
     }
 
 
-    /* -------------------------
-       Button Events
-    ------------------------- */
+
+    /* ======================================
+       Daily Reward Button
+       ====================================== */
 
     document
-      .getElementById("claimButton")
+      .getElementById(
+        "claimButton"
+      )
       .addEventListener(
         "click",
         claimReward
       );
 
 
+
+    /* ======================================
+       Monetag Watch Ad
+       ====================================== */
+
     document
-  .getElementById("watchAd")
-  .addEventListener(
-    "click",
-    async function () {
+      .getElementById(
+        "watchAd"
+      )
+      .addEventListener(
+        "click",
+        async function () {
 
-      const status = document.getElementById("status");
 
-      status.innerText = "Loading ad...";
+          const status =
+            document.getElementById(
+              "status"
+            );
 
-      try {
 
-        const adResult = await show_11565402({
-  ymid: String(currentUser.id) + "_" + Date.now(),
-  requestVar: "daily_reward"
-});
+          try {
 
-console.log("MONETAG AD RESULT:", adResult);
 
-        status.innerText = "Ad completed. Processing reward...";
+            /* Check login */
 
-        await claimReward();
+            if (!currentUser) {
 
-    } catch (error) {
+              throw new Error(
+                "Please wait until your account is connected."
+              );
 
-    console.error("Monetag error:", error);
+            }
 
-    status.innerText =
-        "Ad error: " + (error?.message || "Unknown error");
 
-}
+            /* Check Monetag SDK */
 
-      }
+            if (
+              typeof window.show_11565402 !==
+              "function"
+            ) {
 
-  );
-</script>
+              throw new Error(
+                "Monetag SDK is not loaded."
+              );
+
+            }
+
+
+            status.innerText =
+              "Loading ad...";
+
+
+            console.log(
+              "Starting Monetag ad..."
+            );
+
+
+            /* Unique YMID */
+
+            const ymid =
+              String(
+                currentUser.id
+              ) +
+              "_" +
+              Date.now();
+
+
+            /* Show rewarded ad */
+
+            const adResult =
+              await window.show_11565402(
+                {
+                  ymid: ymid,
+                  requestVar:
+                    "daily_reward"
+                }
+              );
+
+
+            console.log(
+              "MONETAG AD RESULT:",
+              adResult
+            );
+
+
+            /* Ad successfully completed */
+
+            status.innerText =
+              "Ad completed. Processing reward...";
+
+
+            /* Give reward */
+
+            await claimReward();
+
+
+          }
+
+          catch (error) {
+
+
+            console.error(
+              "MONETAG ERROR:",
+              error
+            );
+
+
+            status.innerText =
+              "Ad error: " +
+              (
+                error?.message ||
+                "Unknown error"
+              );
+
+          }
+
+        }
+
+      );
+
+
+
+    /* ======================================
+       Start Application
+       ====================================== */
+
+    console.log(
+      "Starting Daily Reward App..."
+    );
+
+
+    document
+      .getElementById("status")
+      .innerText =
+      "Connecting to account...";
+
+
+    loginUser();
+
+
+  </script>
+
+
 </body>
 
 </html>

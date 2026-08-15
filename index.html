@@ -3,13 +3,6 @@
 
 <head>
 
-  <!-- Monetag SDK -->
-<script
-  src="https://libtl.com/sdk.js"
-  data-zone="11565402"
-  data-sdk="show_11565402">
-</script>
-
   <meta charset="UTF-8">
 
   <meta
@@ -20,6 +13,13 @@
 
   <!-- Telegram WebApp SDK -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+  <!-- Monetag SDK -->
+  <script
+    src="//libtl.com/sdk.js"
+    data-zone="11565402"
+    data-sdk="show_11565402">
+  </script>
 
 
   <style>
@@ -255,6 +255,7 @@
        ====================================== */
 
     const tg = window.Telegram?.WebApp;
+
 
     /* ======================================
        Supabase Functions
@@ -637,91 +638,214 @@
 
 
     /* ======================================
-   Monetag Watch Ad
-   ====================================== */
+       Monetag Watch Ad
+       ====================================== */
 
-document
-  .getElementById("watchAd")
-  .addEventListener("click", async function () {
+    let monetagReady = false;
+    let adBusy = false;
 
-    const status =
-      document.getElementById("status");
+    function waitForMonetagSDK(timeout = 15000) {
 
-    console.log("WATCH AD CLICKED");
+      return new Promise((resolve, reject) => {
 
-    try {
+        const started = Date.now();
 
-      if (!currentUser) {
-        throw new Error(
-          "Please wait until your account is connected."
-        );
-      }
+        const check = () => {
 
-      status.innerText = "Checking ad...";
+          if (typeof window.show_11565402 === "function") {
+            monetagReady = true;
+            console.log("MONETAG SDK READY");
+            resolve(true);
+            return;
+          }
 
-      console.log(
-        "MONETAG SDK:",
-        typeof window.show_11565402
-      );
+          if (Date.now() - started >= timeout) {
+            monetagReady = false;
+            reject(
+              new Error(
+                "Monetag SDK did not become ready."
+              )
+            );
+            return;
+          }
 
-      if (
-        typeof window.show_11565402 !== "function"
-      ) {
-        throw new Error(
-          "Monetag SDK is not loaded."
-        );
-      }
+          setTimeout(check, 250);
 
-      status.innerText = "Loading ad...";
+        };
 
-      const ymid =
-        String(currentUser.id) +
-        "_" +
-        Date.now();
+        check();
 
-      console.log(
-        "Starting Monetag ad:",
-        ymid
-      );
-
-      const adResult =
-        await window.show_11565402({
-          ymid: ymid,
-          requestVar: "daily_reward"
-        });
-
-      console.log(
-        "MONETAG AD RESULT:",
-        adResult
-      );
-
-      /*
-       * Only continue after Monetag confirms
-       * the rewarded event.
-       */
-
-      status.innerText =
-        "Ad completed. Processing reward...";
-
-      await claimReward();
-
-    } catch (error) {
-
-      console.error(
-        "MONETAG AD ERROR:",
-        error
-      );
-
-      status.innerText =
-        "Ad error: " +
-        (
-          error?.message ||
-          "Unable to load ad."
-        );
+      });
 
     }
 
-  });
+
+    async function prepareMonetag() {
+
+      try {
+
+        await waitForMonetagSDK();
+
+        console.log(
+          "MONETAG SDK FUNCTION:",
+          typeof window.show_11565402
+        );
+
+        const adButton =
+          document.getElementById("watchAd");
+
+        if (adButton) {
+          adButton.style.opacity = "1";
+        }
+
+        return true;
+
+      } catch (error) {
+
+        console.error(
+          "MONETAG SDK LOAD ERROR:",
+          error
+        );
+
+        return false;
+
+      }
+
+    }
+
+
+    document
+      .getElementById("watchAd")
+      .addEventListener(
+        "click",
+        async function () {
+
+          const status =
+            document.getElementById("status");
+
+          if (adBusy) {
+            return;
+          }
+
+          try {
+
+            if (!currentUser) {
+
+              throw new Error(
+                "Please wait until your account is connected."
+              );
+
+            }
+
+            adBusy = true;
+
+            status.innerText =
+              "Checking ad...";
+
+            /* Wait for Monetag SDK if it is still loading */
+
+            if (!monetagReady) {
+
+              try {
+
+                await waitForMonetagSDK();
+
+              } catch (sdkError) {
+
+                throw new Error(
+                  "Monetag SDK is not ready. Please close and reopen the Mini App."
+                );
+
+              }
+
+            }
+
+            if (
+              typeof window.show_11565402 !==
+              "function"
+            ) {
+
+              throw new Error(
+                "Monetag SDK is not available."
+              );
+
+            }
+
+            status.innerText =
+              "Loading ad...";
+
+            const ymid =
+              String(currentUser.id) +
+              "_" +
+              Date.now();
+
+            console.log(
+              "STARTING MONETAG AD",
+              {
+                ymid: ymid,
+                sdk: typeof window.show_11565402
+              }
+            );
+
+            /*
+             * Rewarded Interstitial.
+             * The Promise resolves only after Monetag
+             * confirms the ad event.
+             */
+
+            const adResult =
+              await window.show_11565402({
+                ymid: ymid,
+                requestVar: "daily_reward"
+              });
+
+            console.log(
+              "MONETAG AD RESULT:",
+              adResult
+            );
+
+            status.innerText =
+              "Ad completed. Processing reward...";
+
+            /*
+             * Keep the existing backend reward flow.
+             * Reward is requested only after the ad
+             * Promise resolves.
+             */
+
+            await claimReward();
+
+          } catch (error) {
+
+            console.error(
+              "MONETAG AD ERROR:",
+              error
+            );
+
+            status.innerText =
+              "Ad error: " +
+              (
+                error?.message ||
+                "Unable to load ad."
+              );
+
+          } finally {
+
+            adBusy = false;
+
+          }
+
+        }
+      );
+
+
+    /*
+     * Start checking Monetag immediately.
+     * This prevents the user from clicking while
+     * the SDK is still loading.
+     */
+
+    prepareMonetag();
 
 
 
@@ -731,6 +855,11 @@ document
 
     console.log(
       "Starting Daily Reward App..."
+    );
+
+    console.log(
+      "Monetag SDK at startup:",
+      typeof window.show_11565402
     );
 
 

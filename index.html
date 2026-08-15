@@ -4,12 +4,10 @@
 <head>
 
   <!-- Monetag SDK -->
-  <script
+<script
   src="https://libtl.com/sdk.js"
   data-zone="11565402"
-  data-sdk="show_11565402"
-  onload="console.log('MONETAG SDK SCRIPT LOADED')"
-  onerror="console.error('MONETAG SDK SCRIPT FAILED TO LOAD')">
+  data-sdk="show_11565402">
 </script>
 
   <meta charset="UTF-8">
@@ -645,123 +643,91 @@ setTimeout(() => {
 
 
     /* ======================================
-       Monetag Watch Ad
-       ====================================== */
+   Monetag Watch Ad
+   ====================================== */
 
-    document
-      .getElementById(
-        "watchAd"
-      )
-      .addEventListener(
-        "click",
-        async function () {
+document
+  .getElementById("watchAd")
+  .addEventListener("click", async function () {
 
+    const status =
+      document.getElementById("status");
 
-          const status =
-            document.getElementById(
-              "status"
-            );
+    console.log("WATCH AD CLICKED");
 
+    try {
 
-          try {
+      if (!currentUser) {
+        throw new Error(
+          "Please wait until your account is connected."
+        );
+      }
 
+      status.innerText = "Checking ad...";
 
-            /* Check login */
-
-            if (!currentUser) {
-
-              throw new Error(
-                "Please wait until your account is connected."
-              );
-
-            }
-
-
-            /* Check Monetag SDK */
-
-            if (
-              typeof window.show_11565402 !==
-              "function"
-            ) {
-
-              throw new Error(
-                "Monetag SDK is not loaded."
-              );
-
-            }
-
-
-            status.innerText =
-              "Loading ad...";
-
-
-            console.log(
-              "Starting Monetag ad..."
-            );
-
-
-            /* Unique YMID */
-
-            const ymid =
-              String(
-                currentUser.id
-              ) +
-              "_" +
-              Date.now();
-
-
-            /* Show rewarded ad */
-
-            const adResult =
-              await window.show_11565402(
-                {
-                  ymid: ymid,
-                  requestVar:
-                    "daily_reward"
-                }
-              );
-
-
-            console.log(
-              "MONETAG AD RESULT:",
-              adResult
-            );
-
-
-            /* Ad successfully completed */
-
-            status.innerText =
-              "Ad completed. Processing reward...";
-
-
-            /* Give reward */
-
-            await claimReward();
-
-
-          }
-
-          catch (error) {
-
-
-            console.error(
-              "MONETAG ERROR:",
-              error
-            );
-
-
-            status.innerText =
-              "Ad error: " +
-              (
-                error?.message ||
-                "Unknown error"
-              );
-
-          }
-
-        }
-
+      console.log(
+        "MONETAG SDK:",
+        typeof window.show_11565402
       );
+
+      if (
+        typeof window.show_11565402 !== "function"
+      ) {
+        throw new Error(
+          "Monetag SDK is not loaded."
+        );
+      }
+
+      status.innerText = "Loading ad...";
+
+      const ymid =
+        String(currentUser.id) +
+        "_" +
+        Date.now();
+
+      console.log(
+        "Starting Monetag ad:",
+        ymid
+      );
+
+      const adResult =
+        await window.show_11565402({
+          ymid: ymid,
+          requestVar: "daily_reward"
+        });
+
+      console.log(
+        "MONETAG AD RESULT:",
+        adResult
+      );
+
+      /*
+       * Only continue after Monetag confirms
+       * the rewarded event.
+       */
+
+      status.innerText =
+        "Ad completed. Processing reward...";
+
+      await claimReward();
+
+    } catch (error) {
+
+      console.error(
+        "MONETAG AD ERROR:",
+        error
+      );
+
+      status.innerText =
+        "Ad error: " +
+        (
+          error?.message ||
+          "Unable to load ad."
+        );
+
+    }
+
+  });
 
 
 
